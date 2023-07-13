@@ -18,44 +18,53 @@
 
 #include "../zmk-nodefree-config/helper.h"
 #include "../zmk-nodefree-config/keypos_def/keypos_38keys.h"                    // keyposition helpers
+
+#define BASE 0
+#define NAV  1
+#define FN   2
+#define NUM  3
+#define SYS  4
+
+#include "combos.dtsi"  // requires layer aliases
+
+#define ___ &trans
+
+#define QUICK_TAP_MS 175
+
+/* Homerow mods */
+
 #define KEYS_L LT0 LT1 LT2 LT3 LT4 LM0 LM1 LM2 LM3 LM4 LB0 LB1 LB2 LB3 LB4 LB5  // left-hand keys
 #define KEYS_R RT0 RT1 RT2 RT3 RT4 RM0 RM1 RM2 RM3 RM4 RB0 RB1 RB2 RB3 RB4 RB5  // right-hand keys
 #define THUMBS LH2 LH1 LH0 RH0 RH1 RH2                                          // thumb keys
 
-#define BASE 0
-#define NAV  1
-#define SYM  2
-#define ADJ  3
+#define MAKE_HRM(NAME, HOLD, TAP, TRIGGER_POS) \
+    ZMK_BEHAVIOR(NAME, hold_tap, \
+        flavor = "balanced"; \
+        tapping-term-ms = <280>; \
+        quick-tap-ms = <QUICK_TAP_MS>; \
+        global-quick-tap-ms = <150>; \
+        bindings = <HOLD>, <TAP>; \
+        hold-trigger-key-positions = <TRIGGER_POS>; \
+        hold-trigger-on-release; \
+    )
 
-#define ___ &trans
+MAKE_HRM(hml, &kp, &kp, KEYS_R THUMBS)  // left-hand HRMs
+MAKE_HRM(hmr, &kp, &kp, KEYS_L THUMBS)  // right-hand HRMs
 
-/* left-hand HRMs */
-ZMK_BEHAVIOR(hml, hold_tap,
-    flavor = "balanced";
-    tapping-term-ms = <280>;
-    quick-tap-ms = <175>;                // repeat on tap-into-hold
-    global-quick-tap-ms = <150>;         // requires PR #1387
-    bindings = <&kp>, <&kp>;
-    hold-trigger-key-positions = <KEYS_R THUMBS>;
-    hold-trigger-on-release;             // delay positional check until key-release
-)
-
-/* right-hand HRMs */
-ZMK_BEHAVIOR(hmr, hold_tap,
-    flavor = "balanced";
-    tapping-term-ms = <280>;
-    quick-tap-ms = <175>;                // repeat on tap-into-hold
-    global-quick-tap-ms = <150>;         // requires PR #1387
-    bindings = <&kp>, <&kp>;
-    hold-trigger-key-positions = <KEYS_L THUMBS>;
-    hold-trigger-on-release;             // delay positional check until key-release
-)
+MAKE_HRM(hml_repeat, &kp, &key_repeat, KEYS_R THUMBS)  // used for HRM-combo
+MAKE_HRM(hmr_lpar_lt, &kp, &lpar_lt, KEYS_L THUMBS)    // "    "   "   "
+MAKE_HRM(hmr_rpar_gt, &kp, &rpar_gt, KEYS_L THUMBS)    // "    "   "   "
 
 &mt {
   quick-tap-ms = <100>;
   global-quick-tap;
   flavor = "tap-preferred";
   tapping-term-ms = <170>;
+};
+
+&sk {  // sticky-key config
+    release-after-ms = <900>;  // release after 0.6s
+    quick-release;             // no double capitalization when rolling keys
 };
 
 / {
@@ -69,43 +78,59 @@ ZMK_BEHAVIOR(hmr, hold_tap,
     };
 };
 
+/* Keymap */
+
+ZMK_CONDITIONAL_LAYER(FN NUM, SYS)  // FN + NUM --> SYS
+
 ZMK_LAYER(base,
 //               ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮ ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮
                    &kp Q         &kp W         &kp E         &kp R         &kp T           &kp Y         &kp U         &kp I         &kp O         &kp P
 //               ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤ ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
                    &hml LGUI A   &hml LALT S   &hml LCTRL D  &hml LSHFT F  &kp G           &kp H         &hmr RSHFT J  &hmr RCTRL K  &hmr LALT L   &hmr RGUI SEMI
 // ╭─────────────╯─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤ ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────╰──────────────╮
-     &kp LSHFT     &kp Z         &kp X         &kp C         &kp V         &kp B           &kp N         &kp M         &kp COMMA     &kp DOT       &kp FSLH      &kp LALT
+     &kp LSHFT     &kp Z         &kp X         &kp C         &kp V         &kp B           &kp N         &kp M         &kp COMMA     &kp DOT       &kp FSLH      &kp RSHFT
 // ╰─────────────┴─────────────┴─────────────╮─────────────┼─────────────┼─────────────┤ ├─────────────┼─────────────┼─────────────╭─────────────┴─────────────┴──────────────╯
-                                               &kp LCTRL     &kp LGUI      &lt NAV SPACE   &mo SYM       &kp RET       &kp BSPC
+                                               &mo FN        &mo NAV       &kp SPACE       &mo SYM       &kp RET       &mo NUM
 //                                           ╰─────────────┴─────────────┴─────────────╯ ╰─────────────┴─────────────┴─────────────╯
 )
 
 ZMK_LAYER(nav,
 //               ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮ ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮
-                   &kp ESC       ___           &kp UP        &kp EQUAL     ___             &kp INS       &kp HOME      &kp UP        &kp PG_UP     ___
+                   &kp TAB       &kp CAPS      ___           ___           ___             &kp INS       &kp HOME      &kp UP        &kp PG_UP     ___
 //               ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤ ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
-                   &kp CAPS      &kp LEFT      &kp DOWN      &kp RIGHT     ___             &kp DEL       &kp LEFT      &kp DOWN      &kp RIGHT     ___
+                   &sk LGUI      &sk LALT      &sk LCTRL     &sk LSHFT     ___             &kp DEL       &kp LEFT      &kp DOWN      &kp RIGHT     ___
 // ╭─────────────╯─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤ ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────╰──────────────╮
-     ___           &kp TAB       &kp PG_UP     &kp CAPS      &kp PG_DN     ___             ___           &kp END       ___           &kp PG_DN     ___           ___
+     ___           ___           ___           ___           ___           ___             ___           &kp END       ___           &kp PG_DN     ___           ___
 // ╰─────────────┴─────────────┴─────────────╮─────────────┼─────────────┼─────────────┤ ├─────────────┼─────────────┼─────────────╭─────────────┴─────────────┴──────────────╯
-                                               &bt BT_CLR    ___           &kp SPACE       &mo ADJ       ___           ___
+                                               &bt BT_CLR    ___           ___             ___           ___           ___
 //                                           ╰─────────────┴─────────────┴─────────────╯ ╰─────────────┴─────────────┴─────────────╯
 )
 
-ZMK_LAYER(sym,
+ZMK_LAYER(fn,
 //               ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮ ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮
-                   &kp EXCL      &kp AT        &kp HASH      &kp DLLR      &kp PRCNT       &kp CARET     &kp AMPS      &kp RA(U)     &kp SQT       &kp DQT
+                   &kp F12       &kp F7        &kp F8        &kp F9        ___             ___           ___           ___           ___           ___
 //               ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤ ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
-                   &kp RA(A)     ___           &kp RA(S)     ___           ___             &kp C_MUTE    &kp LS(RA(N4)) &kp RA(N5)   &kp RA(N4)    &kp RA(O)
+                   &kp F11       &kp F4        &kp F5        &kp F6        ___             ___           ___           ___           ___           ___
 // ╭─────────────╯─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤ ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────╰──────────────╮
-     ___           &kp RA(F18)   &kp RA(F19)   ___           ___           ___             &kp C_VOL_DN  &kp C_VOL_UP  &kp C_PREV    &kp C_NEXT    &kp BSLH      ___
+     ___           &kp F10       &kp F1        &kp F2        &kp F3        ___             ___           ___           ___           ___           ___           ___
 // ╰─────────────┴─────────────┴─────────────╮─────────────┼─────────────┼─────────────┤ ├─────────────┼─────────────┼─────────────╭─────────────┴─────────────┴──────────────╯
-                                               ___           ___           &mo ADJ         ___           &kp C_PP      ___
+                                               &bt BT_CLR    ___           ___             &kp C_MUTE    ___           ___
 //                                           ╰─────────────┴─────────────┴─────────────╯ ╰─────────────┴─────────────┴─────────────╯
 )
 
-ZMK_LAYER(adj,
+ZMK_LAYER(num,
+//               ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮ ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮
+                   ___           &kp N7        &kp N8        &kp N9        ___             ___           ___           ___           ___           ___
+//               ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤ ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
+                   &hml LGUI N0  &hml LALT N4  &hml LCTRL N5 &hml LSHFT N6 ___             ___           ___           ___           ___           ___
+// ╭─────────────╯─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤ ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────╰──────────────╮
+     ___           ___           &kp N1        &kp N2        &kp N3        ___             ___           ___           ___           ___           ___           ___
+// ╰─────────────┴─────────────┴─────────────╮─────────────┼─────────────┼─────────────┤ ├─────────────┼─────────────┼─────────────╭─────────────┴─────────────┴──────────────╯
+                                               ___           ___           ___             ___           ___           ___
+//                                           ╰─────────────┴─────────────┴─────────────╯ ╰─────────────┴─────────────┴─────────────╯
+)
+
+ZMK_LAYER(sys,
 //               ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮ ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮
                    &sys_reset    &bt BT_CLR    &out OUT_TOG  ___           ___             ___           &kp F7        &kp F8        &kp F9        &kp F12
 //               ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤ ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
