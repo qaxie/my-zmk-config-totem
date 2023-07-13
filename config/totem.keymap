@@ -29,14 +29,6 @@
 #define TVP1 4
 #define TVP2 5
 
-ZMK_BEHAVIOR(hrm, hold_tap,
-    flavor = "balanced";
-    tapping-term-ms = <280>;
-    quick-tap-ms = <125>;
-    global-quick-tap;
-    bindings = <&kp>, <&kp>;
-)
-
 &mt {
   quick-tap-ms = <100>;
   global-quick-tap;
@@ -80,7 +72,7 @@ label= "BASE"                              ;
 // ╷           ╷           ╷           ╷           ╷           ╷           ╷   ╷           ╷           ╷           ╷           ╷           ╷           ╷
 
                 &kp Q       &kp W       &kp E       &kp R       &kp T           &kp Y       &kp U       &kp I       &kp O       &kp P
-                &hrm LGUI A &hrm LALT S &hrm LCTRL D  &hrm LSHFT F &kp G        &kp H       &hrm RSHFT J &hrm RCTRL K &hrm LALT L  &hrm RGUI SEMI
+                &kp A       &kp S       &kp D       &kp F       &kp G           &kp H       &kp J       &kp K       &kp L       &kp SEMI
     &kp LSHFT   &kp Z       &kp X       &kp C       &kp V       &kp B           &kp N       &kp M       &kp COMMA   &kp DOT     &kp FSLH    &kp LALT
                                         &kp LCTRL   &kp LGUI  &lt NAV SPACE     &mo SYM     &kp RET     &kp BSPC
                         >;
